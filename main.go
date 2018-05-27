@@ -1,106 +1,19 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
-	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 
-	"github.com/boltdb/bolt"
 	"github.com/google/uuid"
 	"github.com/mauidude/go-readability"
+	"hawx.me/code/papiermache/data"
+	"hawx.me/code/papiermache/views"
 	"hawx.me/code/route"
 	"hawx.me/code/serve"
 )
-
-var itemBucketName = []byte("items")
-
-type Item struct {
-	Id      string `json:"id"`
-	URL     string `json:"url"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	HTML    string `json:"html"`
-}
-
-type Database interface {
-	List() ([]Item, error)
-	Put(Item) error
-	Get(id string) (Item, error)
-	Close() error
-}
-
-type database struct {
-	db *bolt.DB
-}
-
-func Open(path string) (Database, error) {
-	db, err := bolt.Open(path, 0600, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(itemBucketName)
-		return err
-	})
-
-	return &database{db}, err
-}
-
-func (d *database) List() (items []Item, err error) {
-	err = d.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(itemBucketName)
-		c := b.Cursor()
-
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var item Item
-			json.Unmarshal(v, &item)
-			items = append(items, item)
-		}
-
-		return nil
-	})
-
-	return
-}
-
-func (d *database) Put(item Item) error {
-	return d.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(itemBucketName)
-
-		key := []byte(item.Id)
-		value, err := json.Marshal(item)
-
-		if err != nil {
-			return err
-		}
-
-		return b.Put(key, value)
-	})
-}
-
-func (d *database) Get(id string) (item Item, err error) {
-	err = d.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(itemBucketName)
-
-		value := b.Get([]byte(id))
-		if value == nil {
-			return errors.New("what, that doesn't even exist")
-		}
-
-		return json.Unmarshal(value, &item)
-	})
-
-	return
-}
-
-func (d *database) Close() error {
-	return d.db.Close()
-}
 
 func main() {
 	var (
@@ -110,14 +23,14 @@ func main() {
 	)
 	flag.Parse()
 
-	db, err := Open(*dbPath)
+	db, err := data.Open(*dbPath)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	route.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		items, err := db.List()
+		items, err := db.ListToRead()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -125,26 +38,35 @@ func main() {
 
 		w.Header().Set("Content-Type", "text/html")
 
-		fmt.Fprint(w, "<ul>")
-		for _, item := range items {
-			fmt.Fprintf(w, `<li>
-  <a href="/read/%s">%s</a>
-</li>`, item.Id, item.URL)
-		}
-		fmt.Fprint(w, "</ul>")
+		views.List.Execute(w, views.ListCtx{
+			Title: "To Read",
+			Items: items,
+		})
+	})
+
+	route.HandleFunc("/liked", func(w http.ResponseWriter, r *http.Request) {
+
+	})
+
+	route.HandleFunc("/archived", func(w http.ResponseWriter, r *http.Request) {
+
 	})
 
 	route.HandleFunc("/read/:id", func(w http.ResponseWriter, r *http.Request) {
 		id := route.Vars(r)["id"]
 
-		item, err := db.Get(id)
+		item, content, err := db.GetToReadContent(id)
 		if err != nil {
 			// obviously do better than this
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Fprintf(w, item.Content)
+		views.Read.Execute(w, views.ReadCtx{
+			Title:   "Reading...",
+			Item:    item,
+			Content: template.HTML(content),
+		})
 	})
 
 	route.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
@@ -170,13 +92,11 @@ func main() {
 		}
 
 		id := uuid.New().String()
-		db.Put(Item{
-			Id:      id,
-			URL:     itemURL,
-			Title:   "",
-			HTML:    string(html),
-			Content: doc.Content(),
-		})
+		db.ToRead(data.Meta{
+			Id:    id,
+			URL:   itemURL,
+			Title: "",
+		}, doc.Content(), string(html))
 
 		http.Redirect(w, r, "/read/"+id, http.StatusFound)
 	})
