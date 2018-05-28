@@ -9,12 +9,14 @@ import (
 const read = `<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8" />
-    <title>{{ .Title }}</title>
+    {{ template "head" }}
   </head>
   <body>
-    <h1>{{ .Item.Title }}</h1>
-    <h2>{{ .Item.URL }}</h2>
+    <header>
+      <h1>{{ .Item.Title }}</h1>
+      <h2>{{ .Item.URL }}</h2>
+      <time>{{ .Item.Added }}</time>
+    </header>
 
     <div class="content">
       {{ .Content }}

@@ -12,13 +12,20 @@ const list = `<!DOCTYPE html>
     <h1>{{ .Title }}</h1>
     <ul>
       {{ range .Items }}
-      <li><a href="/read/{{ .Id }}">{{ .URL }}</a></li>
+      <li>
+        <a href="/read/{{ .Id }}">{{ .URL }}</a>
+        {{ if $.Actions }}
+        <a href="/like/{{ .Id }}">Like</a>
+        <a href="/archive/{{ .Id }}">Archive</a>
+        {{ end }}
+      </li>
       {{ end }}
     </ul>
   </body>
 </html>`
 
 type ListCtx struct {
-	Title string
-	Items []data.Meta
+	Title   string
+	Items   []data.Meta
+	Actions bool
 }

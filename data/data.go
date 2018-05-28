@@ -1,28 +1,60 @@
 package data
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/google/uuid"
 )
 
 var (
-	toReadBucketName  = []byte("toRead")
-	likedBucketName   = []byte("liked")
-	archiveBucketName = []byte("archive")
+	// The structure is pretty simple, I think.
+
+	// These three buckets store the data keyed on a uuid
+	metaBucketName    = []byte("meta")
 	contentBucketName = []byte("content")
 	rawBucketName     = []byte("raw")
+
+	// And these buckets store lists of ids with key and value of the id
+	toReadBucketName   = []byte("toRead")
+	likedBucketName    = []byte("liked")
+	archivedBucketName = []byte("archive")
 )
+
+// Item ids are a combination of the current UNIX time and a UUID, this is
+// overkill, but whatever.
+func makeId() (id []byte, now time.Time, err error) {
+	buf := new(bytes.Buffer)
+	now = time.Now().UTC()
+
+	if err = binary.Write(buf, binary.LittleEndian, now.Unix()); err != nil {
+		return
+	}
+	if err = binary.Write(buf, binary.LittleEndian, uuid.New()); err != nil {
+		return
+	}
+
+	id = buf.Bytes()
+	return
+}
 
 type Meta struct {
 	Id    string `json:"id"`
 	URL   string `json:"url"`
 	Title string `json:"title"`
+
+	Added    time.Time `json:"added"`
+	Liked    time.Time `json:"liked"`
+	Archived time.Time `json:"archived"`
 }
 
 type Database interface {
-	ToRead(meta Meta, content, raw string) error
+	ToRead(meta Meta, content, raw string) (id string, err error)
 	Like(id string) error
 	Archive(id string) error
 
@@ -30,7 +62,7 @@ type Database interface {
 	ListLiked() ([]Meta, error)
 	ListArchived() ([]Meta, error)
 
-	GetToReadContent(id string) (Meta, string, error)
+	Get(id string) (Meta, string, error)
 
 	Close() error
 }
@@ -49,7 +81,8 @@ func Open(path string) (Database, error) {
 		for _, bucket := range [][]byte{
 			toReadBucketName,
 			likedBucketName,
-			archiveBucketName,
+			archivedBucketName,
+			metaBucketName,
 			contentBucketName,
 			rawBucketName,
 		} {
@@ -65,13 +98,21 @@ func Open(path string) (Database, error) {
 	return &database{db}, err
 }
 
-func (d *database) ToRead(meta Meta, content, raw string) error {
-	return d.db.Update(func(tx *bolt.Tx) error {
+func (d *database) ToRead(meta Meta, content, raw string) (id string, err error) {
+	key, now, err := makeId()
+	if err != nil {
+		return
+	}
+
+	meta.Id = base64.URLEncoding.EncodeToString(key)
+	meta.Added = now
+
+	return meta.Id, d.db.Update(func(tx *bolt.Tx) error {
 		var (
 			toReadBucket  = tx.Bucket(toReadBucketName)
+			metaBucket    = tx.Bucket(metaBucketName)
 			contentBucket = tx.Bucket(contentBucketName)
 			rawBucket     = tx.Bucket(rawBucketName)
-			key           = []byte(meta.Id)
 		)
 
 		value, err := json.Marshal(meta)
@@ -87,32 +128,44 @@ func (d *database) ToRead(meta Meta, content, raw string) error {
 			return err
 		}
 
-		return toReadBucket.Put(key, value)
+		if err = metaBucket.Put(key, value); err != nil {
+			return err
+		}
+
+		return toReadBucket.Put(key, key)
 	})
 }
 
 func (d *database) Like(id string) error {
-	return d.move(id, toReadBucketName, likedBucketName)
+	key, err := base64.URLEncoding.DecodeString(id)
+	if err != nil {
+		return err
+	}
+
+	return d.db.Update(func(tx *bolt.Tx) error {
+		likedBucket := tx.Bucket(likedBucketName)
+
+		return likedBucket.Put(key, key)
+	})
 }
 
 func (d *database) Archive(id string) error {
-	return d.move(id, toReadBucketName, archiveBucketName)
-}
+	key, err := base64.URLEncoding.DecodeString(id)
+	if err != nil {
+		return err
+	}
 
-func (d *database) move(id string, from, to []byte) error {
 	return d.db.Update(func(tx *bolt.Tx) error {
 		var (
-			fromBucket = tx.Bucket(from)
-			toBucket   = tx.Bucket(to)
-			key        = []byte(id)
+			toReadBucket   = tx.Bucket(toReadBucketName)
+			archivedBucket = tx.Bucket(archivedBucketName)
 		)
 
-		value := fromBucket.Get(key)
-		if err := fromBucket.Delete(key); err != nil {
+		if err := toReadBucket.Delete(key); err != nil {
 			return err
 		}
 
-		return toBucket.Put(key, value)
+		return archivedBucket.Put(key, key)
 	})
 }
 
@@ -121,22 +174,25 @@ func (d *database) ListToRead() ([]Meta, error) {
 }
 
 func (d *database) ListLiked() ([]Meta, error) {
-	return d.list(toReadBucketName)
+	return d.list(likedBucketName)
 }
 
 func (d *database) ListArchived() ([]Meta, error) {
-	return d.list(toReadBucketName)
+	return d.list(archivedBucketName)
 }
 
-func (d *database) list(bucket []byte) (meta []Meta, err error) {
+func (d *database) list(bucket []byte) (metas []Meta, err error) {
 	err = d.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucket)
-		c := b.Cursor()
+		var (
+			listBucket = tx.Bucket(bucket)
+			metaBucket = tx.Bucket(metaBucketName)
+		)
 
+		c := listBucket.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var item Meta
-			json.Unmarshal(v, &item)
-			meta = append(meta, item)
+			var meta Meta
+			json.Unmarshal(metaBucket.Get(v), &meta)
+			metas = append(metas, meta)
 		}
 
 		return nil
@@ -145,16 +201,16 @@ func (d *database) list(bucket []byte) (meta []Meta, err error) {
 	return
 }
 
-func (d *database) GetToReadContent(id string) (Meta, string, error) {
-	return d.getContent(id, toReadBucketName)
-}
+func (d *database) Get(id string) (meta Meta, content string, err error) {
+	key, err := base64.URLEncoding.DecodeString(id)
+	if err != nil {
+		return
+	}
 
-func (d *database) getContent(id string, bucket []byte) (item Meta, content string, err error) {
 	err = d.db.View(func(tx *bolt.Tx) error {
 		var (
-			metaBucket    = tx.Bucket(bucket)
+			metaBucket    = tx.Bucket(metaBucketName)
 			contentBucket = tx.Bucket(contentBucketName)
-			key           = []byte(id)
 		)
 
 		content = string(contentBucket.Get(key))
@@ -164,7 +220,7 @@ func (d *database) getContent(id string, bucket []byte) (item Meta, content stri
 			return errors.New("what, that doesn't even exist")
 		}
 
-		return json.Unmarshal(value, &item)
+		return json.Unmarshal(value, &meta)
 	})
 
 	return
