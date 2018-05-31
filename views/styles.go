@@ -33,7 +33,11 @@ ul {
 
 li {
     position: relative;
+    display: flex;
     border-top: 1px solid #ccc;
+}
+
+li:last-child {
     border-bottom: 1px solid #ccc;
 }
 
@@ -42,10 +46,17 @@ li > a {
     text-decoration: none;
     padding: 1rem 0;
     display: block;
+    word-break: keep-all;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
+    margin: 0 1rem;
 }
 
 .actions {
-    position: absolute;
-    left: -2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    margin-right: 1rem;
+    text-align: right;
 }
 `
