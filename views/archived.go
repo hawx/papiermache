@@ -20,9 +20,7 @@ const archived = `<!DOCTYPE html>
       {{ range .Items }}
       <li>
         <a href="/read/{{ .Id }}">{{ .URL }}</a>
-        <div class="actions">
-          <a href="/like/{{ .Id }}">Like</a>
-        </div>
+        {{ template "actions" . }}
       </li>
       {{ end }}
     </ul>

@@ -53,6 +53,14 @@ type Meta struct {
 	Archived time.Time `json:"archived"`
 }
 
+func (m Meta) IsLiked() bool {
+	return m.Liked != time.Time{}
+}
+
+func (m Meta) IsArchived() bool {
+	return m.Archived != time.Time{}
+}
+
 type Database interface {
 	ToRead(meta Meta, content, raw string) (id string, err error)
 	Like(id string) error
@@ -143,7 +151,17 @@ func (d *database) Like(id string) error {
 	}
 
 	return d.db.Update(func(tx *bolt.Tx) error {
-		likedBucket := tx.Bucket(likedBucketName)
+		var (
+			likedBucket = tx.Bucket(likedBucketName)
+			metaBucket  = tx.Bucket(metaBucketName)
+		)
+
+		if err := updateMeta(key, metaBucket, func(meta Meta) Meta {
+			meta.Liked = time.Now().UTC()
+			return meta
+		}); err != nil {
+			return err
+		}
 
 		return likedBucket.Put(key, key)
 	})
@@ -159,7 +177,15 @@ func (d *database) Archive(id string) error {
 		var (
 			toReadBucket   = tx.Bucket(toReadBucketName)
 			archivedBucket = tx.Bucket(archivedBucketName)
+			metaBucket     = tx.Bucket(metaBucketName)
 		)
+
+		if err := updateMeta(key, metaBucket, func(meta Meta) Meta {
+			meta.Archived = time.Now().UTC()
+			return meta
+		}); err != nil {
+			return err
+		}
 
 		if err := toReadBucket.Delete(key); err != nil {
 			return err
@@ -228,4 +254,23 @@ func (d *database) Get(id string) (meta Meta, content string, err error) {
 
 func (d *database) Close() error {
 	return d.db.Close()
+}
+
+func updateMeta(key []byte, metaBucket *bolt.Bucket, f func(Meta) Meta) error {
+	value := metaBucket.Get(key)
+	if value == nil {
+		return errors.New("what, that doesn't even exist")
+	}
+
+	var meta Meta
+	if err := json.Unmarshal(value, &meta); err != nil {
+		return err
+	}
+
+	value, err := json.Marshal(f(meta))
+	if err != nil {
+		return err
+	}
+
+	return metaBucket.Put(key, value)
 }

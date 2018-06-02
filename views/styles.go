@@ -49,15 +49,22 @@ li > a {
     word-break: keep-all;
     text-overflow: ellipsis;
     overflow-x: hidden;
-    margin: 0 1rem;
+    margin-left: 1rem;
 }
 
 .actions {
     display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    margin-right: 1rem;
-    text-align: right;
+    margin-right: .5rem;
+}
+
+.actions a {
+    margin: 1rem .5rem;
+    display: inline-block;
+}
+
+.actions svg {
+    height: 1rem;
+    width: 1rem;
 }
 
 #cover {

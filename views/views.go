@@ -18,6 +18,7 @@ func init() {
 	tmpl = template.Must(tmpl.New("signIn").Parse(signIn))
 
 	tmpl = template.Must(tmpl.New("head").Parse(head))
+	tmpl = template.Must(tmpl.New("actions").Parse(actions))
 
 	ToRead = &wrappedTemplate{tmpl, "toRead"}
 	Liked = &wrappedTemplate{tmpl, "liked"}

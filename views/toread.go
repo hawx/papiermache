@@ -20,10 +20,7 @@ const toRead = `<!DOCTYPE html>
       {{ range .Items }}
       <li>
         <a href="/read/{{ .Id }}">{{ .URL }}</a>
-        <div class="actions">
-          <a href="/like/{{ .Id }}">Like</a>
-          <a href="/archive/{{ .Id }}">Archive</a>
-        </div>
+        {{ template "actions" . }}
       </li>
       {{ end }}
     </ul>

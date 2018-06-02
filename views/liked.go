@@ -9,7 +9,7 @@ const liked = `<!DOCTYPE html>
   </head>
   <body>
     <header>
-      <h1>papiermache</h1>
+      <h1><a href="/">papiermache</a></h1>
       <nav>
         <a href="/">To Read</a>
         <a href="/liked" class="selected">Liked</a>
@@ -20,9 +20,7 @@ const liked = `<!DOCTYPE html>
       {{ range .Items }}
       <li>
         <a href="/read/{{ .Id }}">{{ .URL }}</a>
-        <div class="actions">
-          <a href="/archive/{{ .Id }}">Archive</a>
-        </div>
+        {{ template "actions" . }}
       </li>
       {{ end }}
     </ul>

@@ -13,6 +13,7 @@ const read = `<!DOCTYPE html>
   </head>
   <body>
     <header>
+      <h1><a href="/">papiermache</a></h1>
       <h1>{{ .Item.Title }}</h1>
       <h2>{{ .Item.URL }}</h2>
       <time>{{ .Item.Added }}</time>
