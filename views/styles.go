@@ -7,7 +7,12 @@ body {
 }
 
 header {
-  margin: 1rem 0 2rem;
+    margin: 1rem 0 2rem;
+}
+
+header h1 a {
+    color: black;
+    text-decoration: none;
 }
 
 nav a {

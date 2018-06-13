@@ -8,14 +8,7 @@ const toRead = `<!DOCTYPE html>
     {{ template "head" }}
   </head>
   <body>
-    <header>
-      <h1>papiermache</h1>
-      <nav>
-        <a href="/" class="selected">To Read</a>
-        <a href="/liked">Liked</a>
-        <a href="/archived">Archived</a>
-      </nav>
-    </header>
+    {{ template "nav" "toread" }}
     <ul>
       {{ range .Items }}
       <li>

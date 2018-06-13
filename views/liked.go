@@ -8,14 +8,7 @@ const liked = `<!DOCTYPE html>
     {{ template "head" }}
   </head>
   <body>
-    <header>
-      <h1><a href="/">papiermache</a></h1>
-      <nav>
-        <a href="/">To Read</a>
-        <a href="/liked" class="selected">Liked</a>
-        <a href="/archived">Archived</a>
-      </nav>
-    </header>
+    {{ template "nav" "liked" }}
     <ul>
       {{ range .Items }}
       <li>

@@ -8,14 +8,7 @@ const archived = `<!DOCTYPE html>
     {{ template "head" }}
   </head>
   <body>
-    <header>
-      <h1>papiermache</h1>
-      <nav>
-        <a href="/">To Read</a>
-        <a href="/liked">Liked</a>
-        <a href="/archived" class="selected">Archived</a>
-      </nav>
-    </header>
+    {{ template "nav" "archived" }}
     <ul>
       {{ range .Items }}
       <li>
