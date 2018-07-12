@@ -63,8 +63,8 @@ func (m Meta) IsArchived() bool {
 
 type Database interface {
 	ToRead(meta Meta, content, raw string) (id string, err error)
-	Like(id string) error
-	Archive(id string) error
+	Like(id string, on bool) error
+	Archive(id string, on bool) error
 
 	ListToRead() ([]Meta, error)
 	ListLiked() ([]Meta, error)
@@ -144,7 +144,7 @@ func (d *database) ToRead(meta Meta, content, raw string) (id string, err error)
 	})
 }
 
-func (d *database) Like(id string) error {
+func (d *database) Like(id string, on bool) error {
 	key, err := base64.URLEncoding.DecodeString(id)
 	if err != nil {
 		return err
@@ -157,17 +157,25 @@ func (d *database) Like(id string) error {
 		)
 
 		if err := updateMeta(key, metaBucket, func(meta Meta) Meta {
-			meta.Liked = time.Now().UTC()
+			if on {
+				meta.Liked = time.Now().UTC()
+			} else {
+				meta.Liked = time.Time{}
+			}
 			return meta
 		}); err != nil {
 			return err
 		}
 
-		return likedBucket.Put(key, key)
+		if on {
+			return likedBucket.Put(key, key)
+		} else {
+			return likedBucket.Delete(key)
+		}
 	})
 }
 
-func (d *database) Archive(id string) error {
+func (d *database) Archive(id string, on bool) error {
 	key, err := base64.URLEncoding.DecodeString(id)
 	if err != nil {
 		return err
@@ -181,17 +189,29 @@ func (d *database) Archive(id string) error {
 		)
 
 		if err := updateMeta(key, metaBucket, func(meta Meta) Meta {
-			meta.Archived = time.Now().UTC()
+			if on {
+				meta.Archived = time.Now().UTC()
+			} else {
+				meta.Archived = time.Time{}
+			}
 			return meta
 		}); err != nil {
 			return err
 		}
 
-		if err := toReadBucket.Delete(key); err != nil {
+		fromBucket := toReadBucket
+		toBucket := archivedBucket
+
+		if !on {
+			fromBucket = archivedBucket
+			toBucket = toReadBucket
+		}
+
+		if err := fromBucket.Delete(key); err != nil {
 			return err
 		}
 
-		return archivedBucket.Put(key, key)
+		return toBucket.Put(key, key)
 	})
 }
 
