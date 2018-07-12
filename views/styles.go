@@ -99,4 +99,31 @@ li > a {
     font-size: 16px;
     font-weight: bold;
     border: 1px solid;
-}`
+}
+
+
+/* article */
+
+article header {
+    max-width: 40rem;
+}
+
+
+article header a {
+    display: block;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    word-break: all;
+    white-space: nowrap;
+}
+
+article header time {
+    color: #333;
+    font-style: italic;
+}
+
+.content {
+    max-width: 40rem;
+}
+
+`

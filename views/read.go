@@ -12,16 +12,20 @@ const read = `<!DOCTYPE html>
     {{ template "head" }}
   </head>
   <body>
-    <header>
-      <h1><a href="/">papiermache</a></h1>
-      <h1>{{ .Item.Title }}</h1>
-      <h2>{{ .Item.URL }}</h2>
-      <time>{{ .Item.Added }}</time>
-    </header>
+    {{ template "nav" "" }}
 
-    <div class="content">
-      {{ .Content }}
-    </div>
+    <article>
+      <header>
+        <h1>{{ .Item.Title }}</h1>
+        <a href="{{ .Item.URL }}">{{ .Item.URL }}</a>
+        <time>{{ .Item.Added }}</time>
+        {{ template "actions" .Item }}
+      </header>
+
+      <div class="content">
+        {{ .Content }}
+      </div>
+    </article>
   </body>
 </html>
 `
