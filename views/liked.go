@@ -12,7 +12,7 @@ const liked = `<!DOCTYPE html>
     <ul>
       {{ range .Items }}
       <li>
-        <a href="/read/{{ .Id }}">{{ .URL }}</a>
+        <a href="/read/{{ .Id }}">{{ .Title }}</a>
         {{ template "actions" . }}
       </li>
       {{ end }}

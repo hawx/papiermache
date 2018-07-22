@@ -42,7 +42,7 @@ func main() {
 
 	db, err := data.Open(conf.DbPath)
 	if err != nil {
-		log.Println(err)
+		log.Println("data:", err)
 		return
 	}
 	defer db.Close()
@@ -58,6 +58,7 @@ func main() {
 	route.Handle("/add", shield(handlers.Add(db)))
 	route.Handle("/like/:id", shield(handlers.Like(db)))
 	route.Handle("/archive/:id", shield(handlers.Archive(db)))
+	route.Handle("/generate", shield(handlers.Generate(db)))
 
 	route.Handle("/sign-in", uberich.SignIn("/"))
 	route.Handle("/sign-out", uberich.SignOut("/"))

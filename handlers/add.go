@@ -1,10 +1,9 @@
 package handlers
 
 import (
-	"io/ioutil"
 	"net/http"
 
-	"github.com/mauidude/go-readability"
+	"github.com/antchfx/goreadly"
 	"hawx.me/code/papiermache/data"
 )
 
@@ -19,22 +18,28 @@ func Add(db data.Database) http.HandlerFunc {
 		}
 		defer resp.Body.Close()
 
-		html, err := ioutil.ReadAll(resp.Body)
+		// html, err := ioutil.ReadAll(resp.Body)
+		// if err != nil {
+		// 	http.Error(w, "Could not get '"+itemURL+"'", http.StatusBadRequest)
+		// 	return
+		// }
+
+		doc, err := goreadly.ParseResponse(resp)
 		if err != nil {
-			http.Error(w, "Could not get '"+itemURL+"'", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		doc, err := readability.NewDocument(string(html))
-		if err != nil {
-			http.Error(w, "Could not understand '"+itemURL+"'", http.StatusBadRequest)
-			return
-		}
+		// doc, err := readability.NewDocument(string(html))
+		// if err != nil {
+		// 	http.Error(w, "Could not understand '"+itemURL+"'", http.StatusBadRequest)
+		// 	return
+		// }
 
 		id, err := db.ToRead(data.Meta{
 			URL:   itemURL,
-			Title: "",
-		}, doc.Content(), string(html))
+			Title: doc.Title,
+		}, doc.Body, "no raw body")
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

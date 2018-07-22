@@ -13,7 +13,7 @@ const list = `<!DOCTYPE html>
     <ul>
       {{ range .Items }}
       <li>
-        <a href="/read/{{ .Id }}">{{ .URL }}</a>
+        <a href="/read/{{ .Id }}">{{ .Title }}</a>
         {{ if $.Actions }}
         <a href="/like/{{ .Id }}">Like</a>
         <a href="/archive/{{ .Id }}">Archive</a>
