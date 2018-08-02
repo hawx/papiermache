@@ -24,6 +24,7 @@ func main() {
 	flag.Parse()
 
 	var conf struct {
+		BaseURL string
 		Secret  string
 		DbPath  string `toml:"database"`
 		Uberich struct {
@@ -36,6 +37,8 @@ func main() {
 	if _, err := toml.DecodeFile(*settingsPath, &conf); err != nil {
 		log.Fatal("toml:", err)
 	}
+
+	views.BaseURL = conf.BaseURL
 
 	store := uberich.NewStore(conf.Secret)
 	uberich := uberich.NewClient(conf.Uberich.AppName, conf.Uberich.AppURL, conf.Uberich.UberichURL, conf.Uberich.Secret, store)

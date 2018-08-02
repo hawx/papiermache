@@ -5,12 +5,16 @@ import (
 	"io"
 )
 
-var SignIn, ToRead, Liked, Archived, List, Read interface {
+var SignIn, ToRead, Liked, Archived, Read interface {
 	Execute(io.Writer, interface{}) error
 }
 
+var BaseURL string = ""
+
 func init() {
-	var tmpl = template.Must(template.New("list").Funcs(template.FuncMap{}).Parse(list))
+	var tmpl = template.Must(template.New("").Funcs(template.FuncMap{
+		"baseURL": func() string { return BaseURL },
+	}).Parse(""))
 	tmpl = template.Must(tmpl.New("toRead").Parse(toRead))
 	tmpl = template.Must(tmpl.New("liked").Parse(liked))
 	tmpl = template.Must(tmpl.New("archived").Parse(archived))
@@ -24,7 +28,6 @@ func init() {
 	ToRead = &wrappedTemplate{tmpl, "toRead"}
 	Liked = &wrappedTemplate{tmpl, "liked"}
 	Archived = &wrappedTemplate{tmpl, "archived"}
-	List = &wrappedTemplate{tmpl, "list"}
 	Read = &wrappedTemplate{tmpl, "read"}
 	SignIn = &wrappedTemplate{tmpl, "signIn"}
 }
