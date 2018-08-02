@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/charmap"
+
 	"github.com/djcrock/periodize"
 	"github.com/google/uuid"
 	"hawx.me/code/papiermache/data"
@@ -21,8 +24,6 @@ func Generate(db data.Database) http.HandlerFunc {
 		if err := generateMobi(db, w); err != nil {
 			log.Println(err)
 		}
-
-		w.WriteHeader(200)
 	}
 }
 
@@ -34,16 +35,25 @@ func generateMobi(db data.Database, w io.Writer) error {
 
 	var articles []periodize.Article
 
+	encoder := encoding.ReplaceUnsupported(charmap.ISO8859_1.NewEncoder())
+
 	for _, item := range list {
 		meta, body, err := db.Get(item.Id)
 		if err != nil {
+			log.Println("generateMobi: could not find", item.Id)
+			continue
+		}
+
+		encodedBody, err := encoder.String(body)
+		if err != nil {
+			log.Println("generateMobi: failed to encode body of", item.Id, ":", err)
 			continue
 		}
 
 		articles = append(articles, periodize.Article{
 			Title:   meta.Title,
 			Author:  "",
-			Content: "<body>" + body + "</body>",
+			Content: "<body>" + encodedBody + "</body>",
 		})
 	}
 
