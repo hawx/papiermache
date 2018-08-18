@@ -3,6 +3,8 @@ package views
 import (
 	"html/template"
 	"io"
+	"net/url"
+	"time"
 )
 
 var SignIn, ToRead, Liked, Archived, Read interface {
@@ -14,6 +16,16 @@ var BaseURL string = ""
 func init() {
 	var tmpl = template.Must(template.New("").Funcs(template.FuncMap{
 		"baseURL": func() string { return BaseURL },
+		"humanDate": func(t time.Time) string {
+			return t.Format("January 02, 2006")
+		},
+		"domain": func(u string) string {
+			pu, err := url.Parse(u)
+			if err != nil {
+				return u
+			}
+			return pu.Host
+		},
 	}).Parse(""))
 	tmpl = template.Must(tmpl.New("toRead").Parse(toRead))
 	tmpl = template.Must(tmpl.New("liked").Parse(liked))

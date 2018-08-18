@@ -3,10 +3,11 @@ package views
 const Styles = `
 body {
     font: 16px/1.3em Georgia;
+    color: #0a0708;
     margin: 0;
 }
 
-body > header, body > article {
+body > header {
     margin: 3rem 0;
     padding: 1rem 0 1rem 5rem;
     max-width: 40rem;
@@ -125,17 +126,29 @@ li > a {
 
 /* article */
 
-article header {
-    max-width: 40rem;
+article {
+    margin: 3rem 0;
+    padding: 1rem 0 1rem 5rem;
+    max-width: 60rem;
+    font-size: 21px;
+    line-height: 1.4;
 }
 
+article header {
+    position: relative;
+}
+
+article header h1 + .meta {
+    margin-top: -1rem;
+    margin-bottom: 2rem;
+}
+
+article header .meta span {
+    color: #333;
+}
 
 article header a {
-    display: block;
-    overflow-x: hidden;
-    text-overflow: ellipsis;
-    word-break: all;
-    white-space: nowrap;
+    color: #333;
 }
 
 article header time {
@@ -143,8 +156,18 @@ article header time {
     font-style: italic;
 }
 
+article header .actions {
+    position: absolute;
+    top: -.5rem;
+    left: -5rem;
+}
+
 .content {
-    max-width: 40rem;
+
+}
+
+article img {
+    max-width: 60rem;
 }
 
 `

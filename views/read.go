@@ -16,10 +16,13 @@ const read = `<!DOCTYPE html>
 
     <article>
       <header>
-        <h1>{{ .Item.Title }}</h1>
-        <a href="{{ .Item.URL }}">{{ .Item.URL }}</a>
-        <time>{{ .Item.Added }}</time>
         {{ template "actions" .Item }}
+        <h1>{{ .Item.Title }}</h1>
+        <div class="meta">
+          <a href="{{ .Item.URL }}">{{ domain .Item.URL }}</a>
+          <span>•</span>
+          <time>{{ humanDate .Item.Added }}</time>
+        </div>
       </header>
 
       <div class="content">
