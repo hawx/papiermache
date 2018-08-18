@@ -3,11 +3,21 @@ package views
 const Styles = `
 body {
     font: 16px/1.3em Georgia;
-    margin: 4rem;
+    margin: 0;
 }
 
-header {
-    margin: 1rem 0 2rem;
+body > header, body > article {
+    margin: 3rem 0;
+    padding: 1rem 0 1rem 5rem;
+    max-width: 40rem;
+}
+
+body > header + ul {
+    padding-top: 0;
+}
+
+body > header {
+    background: #eee;
 }
 
 header h1 a {
@@ -25,14 +35,19 @@ nav a + a {
     margin-left: .5rem;
 }
 
+nav span {
+    margin-left: .5rem;
+    margin-right: .5rem;
+    color: #aaa;
+}
+
 nav .selected {
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #aaa;
 }
 
 ul {
     list-style: none;
     padding: 0;
-    margin: 3rem 0;
     max-width: 40rem;
 }
 
@@ -59,7 +74,8 @@ li > a {
 
 .actions {
     display: flex;
-    margin-right: .5rem;
+    margin-left: .5rem;
+    width: 3.5rem;
 }
 
 .actions a {
@@ -70,6 +86,11 @@ li > a {
 .actions svg {
     height: 1rem;
     width: 1rem;
+    opacity: .5;
+}
+
+.actions a:hover svg {
+    opacity: 1;
 }
 
 #cover {

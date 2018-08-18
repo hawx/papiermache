@@ -12,8 +12,8 @@ const archived = `<!DOCTYPE html>
     <ul>
       {{ range .Items }}
       <li>
-        <a href="/read/{{ .Id }}">{{ .Title }}</a>
         {{ template "actions" . }}
+        <a href="/read/{{ .Id }}">{{ .Title }}</a>
       </li>
       {{ end }}
     </ul>
