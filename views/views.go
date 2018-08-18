@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var SignIn, ToRead, Liked, Archived, Read interface {
+var SignIn, ToRead, Liked, Archived, Read, Generate interface {
 	Execute(io.Writer, interface{}) error
 }
 
@@ -32,6 +32,7 @@ func init() {
 	tmpl = template.Must(tmpl.New("archived").Parse(archived))
 	tmpl = template.Must(tmpl.New("read").Parse(read))
 	tmpl = template.Must(tmpl.New("signIn").Parse(signIn))
+	tmpl = template.Must(tmpl.New("generate").Parse(generate))
 
 	tmpl = template.Must(tmpl.New("head").Parse(head))
 	tmpl = template.Must(tmpl.New("actions").Parse(actions))
@@ -42,6 +43,7 @@ func init() {
 	Archived = &wrappedTemplate{tmpl, "archived"}
 	Read = &wrappedTemplate{tmpl, "read"}
 	SignIn = &wrappedTemplate{tmpl, "signIn"}
+	Generate = &wrappedTemplate{tmpl, "generate"}
 }
 
 type wrappedTemplate struct {

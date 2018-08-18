@@ -3,6 +3,8 @@ package handlers
 // https://stackoverflow.com/questions/5379565/kindle-periodical-format
 
 import (
+	"bytes"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +16,7 @@ import (
 	"github.com/djcrock/periodize"
 	"github.com/google/uuid"
 	"hawx.me/code/papiermache/data"
+	"hawx.me/code/papiermache/views"
 )
 
 func Generate(db data.Database) http.HandlerFunc {
@@ -50,10 +53,21 @@ func generateMobi(db data.Database, w io.Writer) error {
 			continue
 		}
 
-		articles = append(articles, periodize.Article{
+		var buf bytes.Buffer
+		if err = views.Generate.Execute(&buf, views.GenerateCtx{
 			Title:   meta.Title,
-			Author:  "",
-			Content: "<body>" + encodedBody + "</body>",
+			Item:    meta,
+			Content: template.HTML(encodedBody),
+		}); err != nil {
+			log.Println("generateMobi: could not wrap body of", item.Id, ":", err)
+			continue
+		}
+
+		articles = append(articles, periodize.Article{
+			Title:  meta.Title,
+			Author: "",
+			// Content: "<body>" + encodedBody + "</body>",
+			Content: buf.String(),
 		})
 	}
 
