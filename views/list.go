@@ -13,8 +13,15 @@ func list(of string) string {
     <ul>
       {{ range .Items }}
       <li>
+        <div>
+          <a class="read" href="/read/{{ .Id }}">{{ .Title }}</a>
+          <div class="meta">
+            <a href="{{ .URL }}">{{ domain .URL }}</a>
+            <span>•</span>
+            <time>{{ humanDate .Added }}</time>
+          </div>
+        </div>
         {{ template "actions" . }}
-        <a href="/read/{{ .Id }}">{{ .Title }}</a>
        </li>
       {{ end }}
     </ul>

@@ -63,6 +63,7 @@ ul {
 li {
     position: relative;
     display: flex;
+    justify-content: space-between;
     border: 1px solid #ccc;
     background: #fafafa;
     margin-bottom: .5rem;
@@ -72,21 +73,32 @@ li:last-child {
     border-bottom: 1px solid #ccc;
 }
 
-li > a {
+li a.read {
     color: black;
     text-decoration: none;
-    padding: 1rem 0;
     display: block;
     word-break: keep-all;
     text-overflow: ellipsis;
     overflow-x: hidden;
-    margin-left: 1rem;
+    margin: 1rem;
+}
+
+li .meta {
+    margin: 1rem;
+    font-size: .7rem;
+}
+
+li a.read + .meta {
+    margin-top: -.5rem;
+}
+
+li .meta, li .meta a {
+    color: #666;
 }
 
 .actions {
     display: flex;
-    margin-left: .5rem;
-    width: 3.5rem;
+    margin: .5rem;
 }
 
 .actions a {
@@ -102,6 +114,10 @@ li > a {
 
 .actions a:hover svg {
     opacity: 1;
+}
+
+li .meta {
+    display: block;
 }
 
 #cover {
