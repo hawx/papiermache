@@ -17,7 +17,7 @@ func Liked(db data.Database) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/html")
 
-		views.Liked.Execute(w, views.LikedCtx{
+		views.Liked.Execute(w, views.ListCtx{
 			Items: items,
 		})
 	}

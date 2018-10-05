@@ -17,7 +17,7 @@ func ToRead(db data.Database) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/html")
 
-		views.ToRead.Execute(w, views.ToReadCtx{
+		views.ToRead.Execute(w, views.ListCtx{
 			Items: items,
 		})
 	}

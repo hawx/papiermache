@@ -27,9 +27,9 @@ func init() {
 			return pu.Host
 		},
 	}).Parse(""))
-	tmpl = template.Must(tmpl.New("toRead").Parse(toRead))
-	tmpl = template.Must(tmpl.New("liked").Parse(liked))
-	tmpl = template.Must(tmpl.New("archived").Parse(archived))
+	tmpl = template.Must(tmpl.New("toRead").Parse(list("toread")))
+	tmpl = template.Must(tmpl.New("liked").Parse(list("liked")))
+	tmpl = template.Must(tmpl.New("archived").Parse(list("archived")))
 	tmpl = template.Must(tmpl.New("read").Parse(read))
 	tmpl = template.Must(tmpl.New("signIn").Parse(signIn))
 	tmpl = template.Must(tmpl.New("generate").Parse(generate))

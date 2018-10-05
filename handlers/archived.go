@@ -17,7 +17,7 @@ func Archived(db data.Database) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/html")
 
-		views.Archived.Execute(w, views.ArchivedCtx{
+		views.Archived.Execute(w, views.ListCtx{
 			Items: items,
 		})
 	}

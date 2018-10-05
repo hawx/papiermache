@@ -16,12 +16,12 @@ const read = `<!DOCTYPE html>
 
     <article>
       <header>
-        {{ template "actions" .Item }}
         <h1>{{ .Item.Title }}</h1>
         <div class="meta">
           <a href="{{ .Item.URL }}">{{ domain .Item.URL }}</a>
           <span>•</span>
           <time>{{ humanDate .Item.Added }}</time>
+          {{ template "actions" .Item }}
         </div>
       </header>
 

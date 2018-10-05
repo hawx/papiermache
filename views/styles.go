@@ -5,11 +5,13 @@ body {
     font: 16px/1.3em Georgia;
     color: #0a0708;
     margin: 0;
+    background: #eee;
 }
 
 body > header {
-    margin: 3rem 0;
-    padding: 1rem 0 1rem 5rem;
+    box-sizing: border-box;
+    margin: 3rem auto;
+    padding: 0 1rem;
     max-width: 40rem;
 }
 
@@ -19,6 +21,11 @@ body > header + ul {
 
 body > header {
     background: #eee;
+}
+
+body > header nav {
+    display: flex;
+    justify-content: space-between;
 }
 
 header h1 a {
@@ -49,13 +56,16 @@ nav .selected {
 ul {
     list-style: none;
     padding: 0;
+    margin: 0 auto;
     max-width: 40rem;
 }
 
 li {
     position: relative;
     display: flex;
-    border-top: 1px solid #ccc;
+    border: 1px solid #ccc;
+    background: #fafafa;
+    margin-bottom: .5rem;
 }
 
 li:last-child {
@@ -127,8 +137,10 @@ li > a {
 /* article */
 
 article {
-    margin: 3rem 0;
-    padding: 1rem 0 1rem 5rem;
+    background: #fafafa;
+    border: 1px solid #ccc;
+    margin: 3rem auto;
+    padding: 2rem 3rem;
     max-width: 60rem;
     font-size: 21px;
     line-height: 1.4;
@@ -157,9 +169,7 @@ article header time {
 }
 
 article header .actions {
-    position: absolute;
-    top: -.5rem;
-    left: -5rem;
+    display: inline-flex;
 }
 
 .content {
