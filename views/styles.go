@@ -12,7 +12,7 @@ body > header {
     box-sizing: border-box;
     margin: 3rem auto;
     padding: 0 1rem;
-    max-width: 40rem;
+    max-width: 46rem;
 }
 
 body > header + ul {
@@ -57,7 +57,7 @@ ul {
     list-style: none;
     padding: 0;
     margin: 0 auto;
-    max-width: 40rem;
+    max-width: 46rem;
 }
 
 li {
