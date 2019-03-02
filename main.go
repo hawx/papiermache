@@ -7,12 +7,13 @@ import (
 	"net/http"
 
 	"github.com/BurntSushi/toml"
+	"hawx.me/code/indieauth"
+	"hawx.me/code/indieauth/sessions"
 	"hawx.me/code/papiermache/data"
 	"hawx.me/code/papiermache/handlers"
 	"hawx.me/code/papiermache/views"
 	"hawx.me/code/route"
 	"hawx.me/code/serve"
-	"hawx.me/code/uberich"
 )
 
 func main() {
@@ -27,12 +28,7 @@ func main() {
 		BaseURL string
 		Secret  string
 		DbPath  string `toml:"database"`
-		Uberich struct {
-			AppName    string
-			AppURL     string
-			UberichURL string
-			Secret     string
-		}
+		Me      string
 	}
 	if _, err := toml.DecodeFile(*settingsPath, &conf); err != nil {
 		log.Fatal("toml:", err)
@@ -40,8 +36,15 @@ func main() {
 
 	views.BaseURL = conf.BaseURL
 
-	store := uberich.NewStore(conf.Secret)
-	uberich := uberich.NewClient(conf.Uberich.AppName, conf.Uberich.AppURL, conf.Uberich.UberichURL, conf.Uberich.Secret, store)
+	auth, err := indieauth.Authentication(conf.BaseURL, conf.BaseURL+"/callback")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	session, err := sessions.New(conf.Me, conf.Secret, auth)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	db, err := data.Open(conf.DbPath)
 	if err != nil {
@@ -50,21 +53,18 @@ func main() {
 	}
 	defer db.Close()
 
-	shield := func(h http.HandlerFunc) http.Handler {
-		return uberich.Protect(h, http.NotFoundHandler())
-	}
+	route.Handle("/", session.Choose(handlers.ToRead(db), handlers.SignIn()))
+	route.Handle("/liked", session.Shield(handlers.Liked(db)))
+	route.Handle("/archived", session.Shield(handlers.Archived(db)))
+	route.Handle("/read/:id", session.Shield(handlers.Read(db)))
+	route.Handle("/add", session.Shield(handlers.Add(db)))
+	route.Handle("/like/:id", session.Shield(handlers.Like(db)))
+	route.Handle("/archive/:id", session.Shield(handlers.Archive(db)))
+	route.Handle("/generate", session.Shield(handlers.Generate(db)))
 
-	route.Handle("/", uberich.Protect(handlers.ToRead(db), handlers.SignIn()))
-	route.Handle("/liked", shield(handlers.Liked(db)))
-	route.Handle("/archived", shield(handlers.Archived(db)))
-	route.Handle("/read/:id", shield(handlers.Read(db)))
-	route.Handle("/add", shield(handlers.Add(db)))
-	route.Handle("/like/:id", shield(handlers.Like(db)))
-	route.Handle("/archive/:id", shield(handlers.Archive(db)))
-	route.Handle("/generate", shield(handlers.Generate(db)))
-
-	route.Handle("/sign-in", uberich.SignIn("/"))
-	route.Handle("/sign-out", uberich.SignOut("/"))
+	route.Handle("/sign-in", session.SignIn())
+	route.Handle("/callback", session.Callback())
+	route.Handle("/sign-out", session.SignOut())
 
 	route.HandleFunc("/styles.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/css")
